@@ -1,0 +1,9 @@
+{
+  "name": "Weighing.ixi",
+  "main_class": "org.iota.ict.ixi.Weighing",
+  "description": "Weighing.ixi is an IXI (IOTA eXtending Interface) module for the Iota Controlled agenT (Ict). It extends the core client with the functionality to calculate the number of edges incident to a vertex which match a set of attributes within a specific time window.",
+  "repository": "iotaledger/weighing.ixi",
+  "gui_port": -1,
+  "supported_versions": ["0.6"],
+  "version": "0.1-SNAPSHOT"
+}
