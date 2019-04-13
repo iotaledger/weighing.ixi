@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class Weighing extends IxiModule {
 
-    private Graph graph = new Graph();
+    public Graph graph = new Graph();
 
     public Weighing(Ixi ixi) {
         super(ixi);
@@ -17,29 +17,27 @@ public class Weighing extends IxiModule {
     @Override
     public void run() { ; }
 
-    // returns total weight of all compound vertices independent of time
-    public Set<String> getTotalWeights(String vertex, Attribute[] attributesToMatch) {
+    // returns the number of referencing vertices to a given vertex that match a given set of attributes regardless of time
+    public Set<String> getTotalWeights(String vertex, Attribute[] attributes) {
 
-        Set<String> vertexTails = graph.getVertexTails();
         Set<String> weights = new HashSet<>();
+        for(String v: graph.getReferencingVertices(vertex))
 
-        for(String x: vertexTails) {
-
-            if(!graph.isReferencing(x,vertex))
-                continue;
-
-            if(matchesAttributes(x, attributesToMatch))
-                weights.add(x);
-
-        }
+            if(isMatchingAttributes(v, attributes))
+                weights.add(v);
 
         return weights;
 
     }
 
-    private boolean matchesAttributes(String transactionHash, Attribute[] attributesToMatch) {
+    private boolean isMatchingAttributes(String vertex, Attribute[] attributes) {
         // check if available keys match given attributes
         // needs Serialization.ixi to know how data is structured
+        return true;
+    }
+
+    private boolean isMatchingTimeInterval(long lowerbound, long upperbound) {
+        // needs Timestamping.ixi to find the confidence interval
         return true;
     }
 
