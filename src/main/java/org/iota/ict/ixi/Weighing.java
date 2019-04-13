@@ -1,13 +1,15 @@
 package org.iota.ict.ixi;
 
+import org.iota.ict.ixi.util.Attribute;
 import org.iota.ict.ixi.util.Graph;
-import org.iota.ict.model.transaction.Transaction;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Weighing extends IxiModule {
 
     private Graph graph = new Graph();
+
     public Weighing(Ixi ixi) {
         super(ixi);
     }
@@ -16,51 +18,29 @@ public class Weighing extends IxiModule {
     public void run() { ; }
 
     // returns total weight of all compound vertices independent of time
-    public Map<String, Long> getTotalWeights() {
+    public Set<String> getTotalWeights(String vertex, Attribute[] attributesToMatch) {
 
-        Set<Transaction> vertices = new HashSet<>();
+        Set<String> vertexTails = graph.getVertexTails();
+        Set<String> weights = new HashSet<>();
 
-        for(Transaction t: graph.getTransactionsByHash().values()) {
+        for(String x: vertexTails) {
 
-            boolean isTip = true;
-            for(Transaction x: graph.getTransactionsByHash().values()) {
-                if(x==t)
-                    continue;
-                if(x.trunkHash().equals(t.hash)) {
-                    isTip = false;
-                    break;
-                }
-            }
+            if(!graph.isReferencing(x,vertex))
+                continue;
 
-            if(isTip)
-                vertices.add(t);
-
-        }
-
-        Map<String, Long> weights = new HashMap<>();
-
-        for(Transaction t: vertices) {
-
-            long weight = 0;
-
-            for(Transaction x: vertices) {
-
-                if(x == t)
-                    continue;
-
-                List<String> edges = graph.getEdges(x.hash);
-
-                if(edges.contains(t.branchHash()))
-                    weight++;
-
-            }
-
-            weights.put(t.hash, weight);
+            if(matchesAttributes(x, attributesToMatch))
+                weights.add(x);
 
         }
 
         return weights;
 
+    }
+
+    private boolean matchesAttributes(String transactionHash, Attribute[] attributesToMatch) {
+        // check if available keys match given attributes
+        // needs Serialization.ixi to know how data is structured
+        return true;
     }
 
 }
