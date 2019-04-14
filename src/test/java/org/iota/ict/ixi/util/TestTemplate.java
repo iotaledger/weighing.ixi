@@ -10,13 +10,15 @@ import java.util.Set;
 
 public abstract class TestTemplate {
 
-    private Ict ict;
+    protected Ict ict;
     protected Weighing weighingModule;
 
     @Before
     public void setup() {
-        EditableProperties properties1 = new EditableProperties().host("localhost").port(1337).minForwardDelay(0).maxForwardDelay(10).guiEnabled(false);
-        ict = new Ict(properties1.toFinal());
+        EditableProperties properties = new EditableProperties().host("localhost").port(1337).minForwardDelay(0).maxForwardDelay(10).guiEnabled(false);
+        ict = new Ict(properties.toFinal());
+        ict.getModuleHolder().initAllModules();
+        ict.getModuleHolder().startAllModules();
         weighingModule = new Weighing(ict);
     }
 

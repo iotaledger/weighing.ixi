@@ -1,5 +1,7 @@
 package org.iota.ict.ixi;
 
+import org.iota.ict.eee.call.EEEFunctionCallerImplementation;
+import org.iota.ict.eee.call.FunctionEnvironment;
 import org.iota.ict.ixi.util.Attribute;
 import org.iota.ict.ixi.util.Graph;
 
@@ -15,7 +17,11 @@ public class Weighing extends IxiModule {
     }
 
     @Override
-    public void run() { ; }
+    public void run() {
+
+        System.out.println("Weighing.ixi loaded!");
+
+    }
 
     // returns the number of referencing vertices to a given vertex that match a given set of attributes regardless of time
     public Set<String> getTotalWeights(String vertex, Attribute[] attributes) {
