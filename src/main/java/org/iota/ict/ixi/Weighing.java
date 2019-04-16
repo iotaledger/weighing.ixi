@@ -2,39 +2,96 @@ package org.iota.ict.ixi;
 
 import org.iota.ict.eee.call.EEEFunctionCallerImplementation;
 import org.iota.ict.eee.call.FunctionEnvironment;
-import org.iota.ict.ixi.util.Attribute;
-import org.iota.ict.ixi.util.Graph;
+import org.iota.ict.ixi.model.Attribute;
+import org.iota.ict.ixi.model.Interval;
+import org.iota.ict.ixi.model.WeighingCalculation;
+import org.iota.ict.ixi.util.Generator;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class Weighing extends IxiModule {
 
-    public Graph graph = new Graph();
+    private EEEFunctionCallerImplementation caller;
+    private Map<String, WeighingCalculation> calculations = new HashMap<>();
 
     public Weighing(Ixi ixi) {
         super(ixi);
+        caller = new EEEFunctionCallerImplementation(ixi);
     }
 
     @Override
     public void run() {
-
         System.out.println("Weighing.ixi loaded!");
+    }
 
+    public String call(String service, String function, String... args) {
+        String arguments = "";
+        for(int i = 0; i < args.length; i++) {
+            arguments += args[i];
+            if(i < args.length - 1)
+                arguments += ";";
+        }
+        return caller.call(new FunctionEnvironment(service, function), arguments, 3000);
+    }
+
+    public String beginWeighingCalculation(String vertex, Attribute[] attributes) {
+        String identifier = Generator.getRandomHash();
+        calculations.put(identifier, new WeighingCalculation(vertex, attributes));
+        return identifier;
+    }
+
+    public String beginWeighingCalculation(String vertex, Attribute[] attributes, Interval interval) {
+        String identifier = beginWeighingCalculation(vertex, attributes);
+        WeighingCalculation calculation = calculations.get(identifier);
+        calculation.setInterval(interval);
+        return identifier;
     }
 
     // returns the number of referencing vertices to a given vertex that match a given set of attributes regardless of time
-    public Set<String> getTotalWeights(String vertex, Attribute[] attributes) {
+    public Set<String> calculateTotalWeights(String identifier) {
+
+        WeighingCalculation calculation = calculations.get(identifier);
+        String vertex = calculation.getVertex();
+        Attribute[] attributes = calculation.getAttributes();
 
         Set<String> weights = new HashSet<>();
-        for(String v: graph.getReferencingVertices(vertex))
+        String[] referencingVertices = call("Graph.ixi", "getReferencingVertices", vertex).split(";");
 
+        for(String v: referencingVertices)
             if(isMatchingAttributes(v, attributes))
                 weights.add(v);
 
+        calculation.setResult(weights);
         return weights;
 
     }
+
+    // returns the number of referencing nodes to a given node that correspond to a given set of attributes, depending on time
+    public Set<String> calculateTotalWeightsDependingOnTime(String identifier) {
+
+        calculateTotalWeights(identifier);
+        WeighingCalculation calculation = calculations.get(identifier);
+        Interval interval = calculation.getInterval();
+        Set<String> vertices = calculation.getResult();
+
+        for(String v: new HashSet<>(vertices))
+            if(!isMatchingTimeInterval(v, interval.getLowerbound(), interval.getUpperbound()))
+                vertices.remove(v);
+
+        calculation.setResult(vertices);
+        return vertices;
+
+    }
+
+
+
+    // returns a list of vertices at the lower bound of the time frame
+   // List<Hash> getLowerVertices(Hash identifier)
+    // returns a list of vertices at the upper bound of the time frame
+  //  List<Hash> getUpperVertices(Hash identifier)
 
     private boolean isMatchingAttributes(String vertex, Attribute[] attributes) {
         // check if available keys match given attributes
@@ -42,8 +99,16 @@ public class Weighing extends IxiModule {
         return true;
     }
 
-    private boolean isMatchingTimeInterval(long lowerbound, long upperbound) {
+    private boolean isMatchingTimeInterval(String vertex, long lowerbound, long upperbound) {
         // needs Timestamping.ixi to find the confidence interval
+        return true;
+    }
+
+    private boolean isAtTheLowerbound(String identifier) {
+        return true;
+    }
+
+    private boolean isAtTheUpperbound(String identifier) {
         return true;
     }
 

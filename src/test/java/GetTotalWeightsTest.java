@@ -1,9 +1,10 @@
-import org.iota.ict.ixi.util.Attribute;
+import org.iota.ict.ixi.model.Attribute;
+import org.iota.ict.ixi.util.Generator;
 import org.iota.ict.ixi.util.TestTemplate;
-import org.iota.ict.ixi.util.VertexGenerator;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -13,23 +14,26 @@ public class GetTotalWeightsTest extends TestTemplate {
     public void getTotalWeightsIndependentOfTimeTest() {
 
         // create vertices
-        String firstVertex = weighingModule.graph.createVertex(VertexGenerator.random(), VertexGenerator.generateRandomEdges(10)); // vertex of interest
-        String secondVertex = weighingModule.graph.createVertex(VertexGenerator.random(), VertexGenerator.generateRandomEdges(10));
-        String thirdVertex = weighingModule.graph.createVertex(VertexGenerator.random(), VertexGenerator.generateRandomEdges(10));
+        String firstVertex =  weighingModule.call("Graph.ixi", "createVertex", new String[] { Generator.getRandomHash(), Generator.getRandomHash() }); // vertex of interest
+        String secondVertex = weighingModule.call("Graph.ixi", "createVertex", new String[] { Generator.getRandomHash(), Generator.getRandomHash() });
+        String thirdVertex = weighingModule.call("Graph.ixi", "createVertex", new String[] { Generator.getRandomHash(), Generator.getRandomHash() });
 
         // connect second vertex with first vertex
-        secondVertex = weighingModule.graph.addEdge(secondVertex, firstVertex);
+        secondVertex = weighingModule.call("Graph.ixi", "addEdge", new String[] { secondVertex, firstVertex });
 
         // connect third vertex with first vertex
-        thirdVertex = weighingModule.graph.addEdge(thirdVertex, firstVertex);
+        thirdVertex = weighingModule.call("Graph.ixi", "addEdge", new String[] { thirdVertex, firstVertex });
 
-        List<String> adjacentVertices = weighingModule.graph.getReferencingVertices(firstVertex);
-        Assert.assertEquals(2, adjacentVertices.size());
-        Assert.assertTrue(adjacentVertices.contains(secondVertex));
-        Assert.assertTrue(adjacentVertices.contains(thirdVertex));
+        String[] adjacentVertices = weighingModule.call("Graph.ixi", "getReferencingVertices", new String[] { firstVertex }).split(";");
+        Assert.assertEquals(2, adjacentVertices.length);
+        List<String> list = Arrays.asList(adjacentVertices);
+        Assert.assertTrue(list.contains(secondVertex));
+        Assert.assertTrue(list.contains(thirdVertex));
 
-        Set<String> weights = weighingModule.getTotalWeights(firstVertex, new Attribute[] { new Attribute() });
-        Assert.assertEquals(2, adjacentVertices.size());
+        String identifier = weighingModule.beginWeighingCalculation(firstVertex, new Attribute[] { new Attribute() });
+
+        Set<String> weights = weighingModule.calculateTotalWeights(identifier);
+        Assert.assertEquals(2, weights.size());
         Assert.assertTrue(weights.contains(secondVertex));
         Assert.assertTrue(weights.contains(thirdVertex));
 
