@@ -9,8 +9,6 @@ public class GraphEEETest extends TestTemplate {
     @Test
     public void testGraphInteraction() {
 
-        EEEFunctionCallerImplementation caller = new EEEFunctionCallerImplementation(ict);
-
         String data = "MY9DATA99999999999999999999999999999999999999999999999999999999999999999999999999";
         String edge = "MY9EDGE99999999999999999999999999999999999999999999999999999999999999999999999999";
 

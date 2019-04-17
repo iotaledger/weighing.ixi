@@ -7,10 +7,7 @@ import org.iota.ict.ixi.model.Interval;
 import org.iota.ict.ixi.model.WeighingCalculation;
 import org.iota.ict.ixi.util.Generator;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Weighing extends IxiModule {
 
@@ -86,10 +83,11 @@ public class Weighing extends IxiModule {
 
     }
 
-
-
     // returns a list of vertices at the lower bound of the time frame
-   // List<Hash> getLowerVertices(Hash identifier)
+    //List<String> getLowerVertices(String identifier) {
+
+
+   // }
     // returns a list of vertices at the upper bound of the time frame
   //  List<Hash> getUpperVertices(Hash identifier)
 
@@ -99,9 +97,17 @@ public class Weighing extends IxiModule {
         return true;
     }
 
-    private boolean isMatchingTimeInterval(String vertex, long lowerbound, long upperbound) {
-        // needs Timestamping.ixi to find the confidence interval
-        return true;
+    private boolean isMatchingTimeInterval(String transactionHash, long lowerbound, long upperbound) {
+
+        String[] interval = call("Timestamping.ixi", "getTimestampInterval", transactionHash).split(";");
+        long l = Long.parseLong(interval[0]);
+        long u = Long.parseLong(interval[1]);
+
+        if(l >= lowerbound && u <= upperbound)
+            return true;
+
+        return false;
+
     }
 
     private boolean isAtTheLowerbound(String identifier) {
