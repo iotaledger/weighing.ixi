@@ -1,13 +1,12 @@
-import org.iota.ict.eee.call.EEEFunctionCallerImplementation;
 import org.iota.ict.eee.call.FunctionEnvironment;
 import org.iota.ict.ixi.util.TestTemplate;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class GraphEEETest extends TestTemplate {
+public class GraphTest extends TestTemplate {
 
     @Test
-    public void testGraphInteraction() {
+    public void startVertexTest() {
 
         String data = "MY9DATA99999999999999999999999999999999999999999999999999999999999999999999999999";
         String edge = "MY9EDGE99999999999999999999999999999999999999999999999999999999999999999999999999";

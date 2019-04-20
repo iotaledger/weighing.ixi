@@ -8,10 +8,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public class GetTotalWeightsTest extends TestTemplate {
+public class CalculateWeightsTest extends TestTemplate {
 
     @Test
-    public void getTotalWeightsIndependentOfTimeTest() {
+    public void calculateWeightsIndependentOfTime() {
 
         // create vertices
         String firstVertex =  weighingModule.call("Graph.ixi", "createVertex", new String[] { Generator.getRandomHash(), Generator.getRandomHash() }); // vertex of interest
@@ -32,7 +32,7 @@ public class GetTotalWeightsTest extends TestTemplate {
 
         String identifier = weighingModule.beginWeighingCalculation(firstVertex, new Attribute[] { new Attribute() });
 
-        Set<String> weights = weighingModule.calculateTotalWeights(identifier);
+        Set<String> weights = weighingModule.calculateWeightsIndependentOfTime(identifier);
         Assert.assertEquals(2, weights.size());
         Assert.assertTrue(weights.contains(secondVertex));
         Assert.assertTrue(weights.contains(thirdVertex));

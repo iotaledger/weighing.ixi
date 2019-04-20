@@ -48,7 +48,7 @@ public class Weighing extends IxiModule {
     }
 
     // returns the number of referencing vertices to a given vertex that match a given set of attributes regardless of time
-    public Set<String> calculateTotalWeights(String identifier) {
+    public Set<String> calculateWeightsIndependentOfTime(String identifier) {
 
         WeighingCalculation calculation = calculations.get(identifier);
         String vertex = calculation.getVertex();
@@ -67,9 +67,9 @@ public class Weighing extends IxiModule {
     }
 
     // returns the number of referencing nodes to a given node that correspond to a given set of attributes, depending on time
-    public Set<String> calculateTotalWeightsDependingOnTime(String identifier) {
+    public Set<String> calculateWeightsDependingOnTime(String identifier) {
 
-        calculateTotalWeights(identifier);
+        calculateWeightsIndependentOfTime(identifier);
         WeighingCalculation calculation = calculations.get(identifier);
         Interval interval = calculation.getInterval();
         Set<String> vertices = calculation.getResult();
@@ -84,12 +84,34 @@ public class Weighing extends IxiModule {
     }
 
     // returns a list of vertices at the lower bound of the time frame
-    //List<String> getLowerVertices(String identifier) {
+    public Set<String> getLowerVertices(String identifier) {
 
+        WeighingCalculation calculation = calculations.get(identifier);
+        long lowerbound = calculation.getInterval().getLowerbound();
+        Set<String> vertices = new HashSet<>(calculation.getResult());
 
-   // }
+        for(String v: new HashSet<>(vertices))
+            if(!isMatchingTimeInterval(v, lowerbound, lowerbound))
+                vertices.remove(v);
+
+        return vertices;
+
+    }
+
     // returns a list of vertices at the upper bound of the time frame
-  //  List<Hash> getUpperVertices(Hash identifier)
+    public Set<String> getUpperVertices(String identifier) {
+
+        WeighingCalculation calculation = calculations.get(identifier);
+        long upperbound = calculation.getInterval().getUpperbound();
+        Set<String> vertices = new HashSet<>(calculation.getResult());
+
+        for(String v: new HashSet<>(vertices))
+            if(!isMatchingTimeInterval(v, upperbound, upperbound))
+                vertices.remove(v);
+
+        return vertices;
+
+    }
 
     private boolean isMatchingAttributes(String vertex, Attribute[] attributes) {
         // check if available keys match given attributes
@@ -108,14 +130,6 @@ public class Weighing extends IxiModule {
 
         return false;
 
-    }
-
-    private boolean isAtTheLowerbound(String identifier) {
-        return true;
-    }
-
-    private boolean isAtTheUpperbound(String identifier) {
-        return true;
     }
 
 }

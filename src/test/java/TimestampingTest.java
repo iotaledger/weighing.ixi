@@ -5,7 +5,7 @@ import org.iota.ict.model.transaction.TransactionBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TimestampingEEETest extends TestTemplate {
+public class TimestampingTest extends TestTemplate {
 
     @Test
     public void testGetTimestampingInterval() {
