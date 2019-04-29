@@ -69,17 +69,24 @@ public class Weighing extends IxiModule {
     // returns the number of referencing nodes to a given node that correspond to a given set of attributes, depending on time
     public Set<String> calculateWeightsDependingOnTime(String identifier) {
 
-        calculateWeightsIndependentOfTime(identifier);
         WeighingCalculation calculation = calculations.get(identifier);
+        String vertex = calculation.getVertex();
+        Attribute[] attributes = calculation.getAttributes();
         Interval interval = calculation.getInterval();
-        Set<String> vertices = calculation.getResult();
 
-        for(String v: new HashSet<>(vertices))
+        Set<String> weights = new HashSet<>();
+        String[] referencingVertices = call("Graph.ixi", "getReferencingVertices", vertex).split(";");
+
+        for(String v: referencingVertices)
+            if(isMatchingAttributes(v, attributes))
+                weights.add(v);
+
+        for(String v: new HashSet<>(weights))
             if(!isMatchingTimeInterval(v, interval.getLowerbound(), interval.getUpperbound()))
-                vertices.remove(v);
+                weights.remove(v);
 
-        calculation.setResult(vertices);
-        return vertices;
+        calculation.setResult(weights);
+        return weights;
 
     }
 
@@ -119,9 +126,13 @@ public class Weighing extends IxiModule {
         return true;
     }
 
-    private boolean isMatchingTimeInterval(String transactionHash, long lowerbound, long upperbound) {
+    private boolean isMatchingTimeInterval(String virtualTail, long lowerbound, long upperbound) {
 
-        String[] interval = call("Timestamping.ixi", "getTimestampInterval", transactionHash).split(";");
+        String serializedTail = call("Graph.ixi", "getSerializedTail", virtualTail);
+
+        String identifier = caller.call(new FunctionEnvironment("Timestamping.ixi", "beginTimestampCalculation"), serializedTail + ";" + serializedTail, 3000);
+        String[] interval = caller.call(new FunctionEnvironment("Timestamping.ixi", "getTimestampInterval"), identifier, 3000).split(";");
+
         long l = Long.parseLong(interval[0]);
         long u = Long.parseLong(interval[1]);
 
