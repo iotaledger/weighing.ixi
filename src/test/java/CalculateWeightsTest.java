@@ -2,6 +2,8 @@ import org.iota.ict.ixi.model.Attribute;
 import org.iota.ict.ixi.model.Interval;
 import org.iota.ict.ixi.util.Generator;
 import org.iota.ict.ixi.util.TestTemplate;
+import org.iota.ict.model.transaction.Transaction;
+import org.iota.ict.model.transaction.TransactionBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -60,25 +62,56 @@ public class CalculateWeightsTest extends TestTemplate {
         // connect fourth vertex with first vertex
         fourthVertex = weighingModule.call("Graph.ixi", "addEdge", new String[] { fourthVertex, firstVertex });
 
-        long lowerbound1 = System.currentTimeMillis();
-        String serializedSecondVertex = weighingModule.call("Graph.ixi", "serializeAndSubmit", new String[] { secondVertex }).split(";")[0];
-        String serializedThirdVertex = weighingModule.call("Graph.ixi", "serializeAndSubmit", new String[] { thirdVertex }).split(";")[0];
-        Thread.sleep(2000);
-        long upperbound1 = System.currentTimeMillis();
+        // build chain of transactions
+        TransactionBuilder genesisBuilder = new TransactionBuilder();
+        genesisBuilder.attachmentTimestampLowerBound = System.currentTimeMillis();
+        genesisBuilder.attachmentTimestampUpperBound = System.currentTimeMillis();
+        Transaction genesisTransaction = genesisBuilder.build();
+        String genesis = genesisTransaction.hash;
+        ict1.submit(genesisTransaction);
 
         Thread.sleep(100);
 
-        long lowerbound2 = System.currentTimeMillis();
-        String serializedFourthVertex = weighingModule.call("Graph.ixi", "serializeAndSubmit", new String[] { fourthVertex }).split(";")[0];
-        Thread.sleep(2000);
-        long upperbound2 = System.currentTimeMillis();
+        // attach first vertex
+        String firstSerializedVertex = weighingModule.call("Graph.ixi", "serializeAndSubmitToCustomTips", new String[] { firstVertex, genesis, genesis });
+        Thread.sleep(100);
 
-        String identifier = weighingModule.beginWeighingCalculation(firstVertex, new Attribute[] { new Attribute() }, new Interval(lowerbound1, upperbound1));
-        Set<String> weights = weighingModule.calculateWeightsDependingOnTime(identifier);
+        // attach second vertex
+        String secondSerializedVertex = weighingModule.call("Graph.ixi", "serializeAndSubmitToCustomTips", new String[] { secondVertex, firstSerializedVertex, firstSerializedVertex });
+        Thread.sleep(100);
 
-        Assert.assertEquals(2, weights.size());
-        Assert.assertTrue(weights.contains(secondVertex));
-        Assert.assertTrue(weights.contains(thirdVertex));
+        // attach third vertex
+        String thirdSerializedVertex = weighingModule.call("Graph.ixi", "serializeAndSubmitToCustomTips", new String[] { thirdVertex, secondSerializedVertex, secondSerializedVertex });
+        Thread.sleep(100);
+
+        // attach fourth vertex
+        String fourthSerializedVertex = weighingModule.call("Graph.ixi", "serializeAndSubmitToCustomTips", new String[] { fourthVertex, thirdSerializedVertex, thirdSerializedVertex });
+        Thread.sleep(100);
+
+        // attach random tip transaction
+        TransactionBuilder tip = new TransactionBuilder();
+        tip.trunkHash = fourthSerializedVertex;
+        tip.branchHash = fourthSerializedVertex;
+        tip.attachmentTimestampLowerBound = System.currentTimeMillis();
+        tip.attachmentTimestampUpperBound = System.currentTimeMillis();
+        ict1.submit(tip.build());
+        Thread.sleep(1000);
+
+        // calculate weights between 0 - MAX_LONG_VALUE
+        String identifier1 = weighingModule.beginWeighingCalculation(firstVertex, new Attribute[] { new Attribute() }, new Interval(0, Long.MAX_VALUE));
+        Set<String> weights1 = weighingModule.calculateWeightsDependingOnTime(identifier1, genesis);
+
+        Assert.assertEquals(3, weights1.size());
+        Assert.assertTrue(weights1.contains(secondVertex));
+        Assert.assertTrue(weights1.contains(thirdVertex));
+        Assert.assertTrue(weights1.contains(fourthVertex));
+
+        // calculate weights between 0 - THIRD_VERTEX
+        Transaction thirdVertexTransaction = ict1.findTransactionByHash(thirdSerializedVertex);
+        String identifier2 = weighingModule.beginWeighingCalculation(firstVertex, new Attribute[] { new Attribute() }, new Interval(0, thirdVertexTransaction.attachmentTimestampUpperBound));
+        Set<String> weights2 = weighingModule.calculateWeightsDependingOnTime(identifier2, genesis);
+
+        Assert.assertEquals(1, weights2.size());
 
 
     }

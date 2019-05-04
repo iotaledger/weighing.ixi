@@ -67,7 +67,7 @@ public class Weighing extends IxiModule {
     }
 
     // returns the number of referencing nodes to a given node that correspond to a given set of attributes, depending on time
-    public Set<String> calculateWeightsDependingOnTime(String identifier) {
+    public Set<String> calculateWeightsDependingOnTime(String identifier, String randomWalkEntry) {
 
         WeighingCalculation calculation = calculations.get(identifier);
         String vertex = calculation.getVertex();
@@ -81,9 +81,14 @@ public class Weighing extends IxiModule {
             if(isMatchingAttributes(v, attributes))
                 weights.add(v);
 
-        for(String v: new HashSet<>(weights))
-            if(!isMatchingTimeInterval(v, interval.getLowerbound(), interval.getUpperbound()))
+        for(String v: new HashSet<>(weights)) {
+
+            String serializedTail = getSerializedTail(v);
+            if(!isMatchingTimeInterval(serializedTail, interval.getLowerbound(), interval.getUpperbound(), randomWalkEntry))
                 weights.remove(v);
+
+        }
+
 
         calculation.setResult(weights);
         return weights;
@@ -91,14 +96,14 @@ public class Weighing extends IxiModule {
     }
 
     // returns a list of vertices at the lower bound of the time frame
-    public Set<String> getLowerVertices(String identifier) {
+    public Set<String> getLowerVertices(String identifier, String randomWalkEntry) {
 
         WeighingCalculation calculation = calculations.get(identifier);
         long lowerbound = calculation.getInterval().getLowerbound();
         Set<String> vertices = new HashSet<>(calculation.getResult());
 
         for(String v: new HashSet<>(vertices))
-            if(!isMatchingTimeInterval(v, lowerbound, lowerbound))
+            if(!isMatchingTimeInterval(v, lowerbound, lowerbound, randomWalkEntry))
                 vertices.remove(v);
 
         return vertices;
@@ -106,14 +111,14 @@ public class Weighing extends IxiModule {
     }
 
     // returns a list of vertices at the upper bound of the time frame
-    public Set<String> getUpperVertices(String identifier) {
+    public Set<String> getUpperVertices(String identifier, String randomWalkEntry) {
 
         WeighingCalculation calculation = calculations.get(identifier);
         long upperbound = calculation.getInterval().getUpperbound();
         Set<String> vertices = new HashSet<>(calculation.getResult());
 
         for(String v: new HashSet<>(vertices))
-            if(!isMatchingTimeInterval(v, upperbound, upperbound))
+            if(!isMatchingTimeInterval(v, upperbound, upperbound, randomWalkEntry))
                 vertices.remove(v);
 
         return vertices;
@@ -126,11 +131,9 @@ public class Weighing extends IxiModule {
         return true;
     }
 
-    private boolean isMatchingTimeInterval(String virtualTail, long lowerbound, long upperbound) {
+    private boolean isMatchingTimeInterval(String serializedTail, long lowerbound, long upperbound, String randomWalkEntry) {
 
-        String serializedTail = call("Graph.ixi", "getSerializedTail", virtualTail);
-
-        String identifier = caller.call(new FunctionEnvironment("Timestamping.ixi", "beginTimestampCalculation"), serializedTail + ";" + serializedTail, 3000);
+        String identifier = caller.call(new FunctionEnvironment("Timestamping.ixi", "beginTimestampCalculation"), serializedTail + ";" + randomWalkEntry, 3000);
         String[] interval = caller.call(new FunctionEnvironment("Timestamping.ixi", "getTimestampInterval"), identifier, 3000).split(";");
 
         long l = Long.parseLong(interval[0]);
@@ -141,6 +144,10 @@ public class Weighing extends IxiModule {
 
         return false;
 
+    }
+
+    private String getSerializedTail(String virtualTail) {
+        return call("Graph.ixi", "getSerializedTail", virtualTail);
     }
 
 }
