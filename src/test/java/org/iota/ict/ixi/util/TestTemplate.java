@@ -2,7 +2,7 @@ package org.iota.ict.ixi.util;
 
 import org.iota.ict.Ict;
 import org.iota.ict.eee.call.EEEFunctionCallerImplementation;
-import org.iota.ict.ixi.Weighing;
+import org.iota.ict.ixi.WeighingModule;
 import org.iota.ict.utils.properties.EditableProperties;
 import org.junit.After;
 import org.junit.Before;
@@ -14,7 +14,7 @@ public abstract class TestTemplate {
     protected Ict ict1;
     protected Ict ict2;
     protected EEEFunctionCallerImplementation caller;
-    protected Weighing weighingModule;
+    protected WeighingModule weighingModule;
 
     @Before
     public void setup() {
@@ -23,7 +23,7 @@ public abstract class TestTemplate {
         ict1 = new Ict(properties1.toFinal());
         ict1.getModuleHolder().initAllModules();
         ict1.getModuleHolder().startAllModules();
-        weighingModule = new Weighing(ict1);
+        weighingModule = new WeighingModule(ict1);
         caller = new EEEFunctionCallerImplementation(ict1);
         ict2 = new Ict(properties2.toFinal());
         addNeighborToIct(ict1,ict2);

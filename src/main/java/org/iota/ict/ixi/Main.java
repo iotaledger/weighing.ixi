@@ -13,7 +13,7 @@ public class Main {
         Properties properties = new Properties();
         Ict ict = new Ict(properties.toFinal());
         ict.getModuleHolder().initAllModules();
-        ict.getModuleHolder().loadVirtualModule(Weighing.class, "Weighing.ixi");
+        ict.getModuleHolder().loadVirtualModule(WeighingModule.class, "Weighing.ixi");
         ict.getModuleHolder().startAllModules();
 
     }

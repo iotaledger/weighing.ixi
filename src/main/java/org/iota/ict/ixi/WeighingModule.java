@@ -9,12 +9,12 @@ import org.iota.ict.ixi.util.Generator;
 
 import java.util.*;
 
-public class Weighing extends IxiModule {
+public class WeighingModule extends IxiModule {
 
     private EEEFunctionCallerImplementation caller;
     private Map<String, WeighingCalculation> calculations = new HashMap<>();
 
-    public Weighing(Ixi ixi) {
+    public WeighingModule(Ixi ixi) {
         super(ixi);
         caller = new EEEFunctionCallerImplementation(ixi);
     }
@@ -99,14 +99,13 @@ public class Weighing extends IxiModule {
     public Set<String> getLowerVertices(String identifier, String randomWalkEntry) {
 
         WeighingCalculation calculation = calculations.get(identifier);
+        String vertex = calculation.getVertex();
+        Attribute[] attributes = calculation.getAttributes();
         long lowerbound = calculation.getInterval().getLowerbound();
-        Set<String> vertices = new HashSet<>(calculation.getResult());
 
-        for(String v: new HashSet<>(vertices))
-            if(!isMatchingTimeInterval(v, lowerbound, lowerbound, randomWalkEntry))
-                vertices.remove(v);
+        String beginWeighingCalculation = beginWeighingCalculation(vertex, attributes, new Interval(0, lowerbound));
 
-        return vertices;
+        return calculateWeightsDependingOnTime(beginWeighingCalculation, randomWalkEntry);
 
     }
 
@@ -114,14 +113,13 @@ public class Weighing extends IxiModule {
     public Set<String> getUpperVertices(String identifier, String randomWalkEntry) {
 
         WeighingCalculation calculation = calculations.get(identifier);
+        String vertex = calculation.getVertex();
+        Attribute[] attributes = calculation.getAttributes();
         long upperbound = calculation.getInterval().getUpperbound();
-        Set<String> vertices = new HashSet<>(calculation.getResult());
 
-        for(String v: new HashSet<>(vertices))
-            if(!isMatchingTimeInterval(v, upperbound, upperbound, randomWalkEntry))
-                vertices.remove(v);
+        String beginWeighingCalculation = beginWeighingCalculation(vertex, attributes, new Interval(upperbound, Long.MAX_VALUE));
 
-        return vertices;
+        return calculateWeightsDependingOnTime(beginWeighingCalculation, randomWalkEntry);
 
     }
 
@@ -148,6 +146,10 @@ public class Weighing extends IxiModule {
 
     private String getSerializedTail(String virtualTail) {
         return call("Graph.ixi", "getSerializedTail", virtualTail);
+    }
+
+    public WeighingCalculation getCalculations(String identfier) {
+        return calculations.get(identfier);
     }
 
 }
