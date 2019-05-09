@@ -21,9 +21,16 @@ public class WeighingModule extends IxiModule {
 
     @Override
     public void run() {
-        System.out.println("Weighing.ixi loaded!");
+        System.out.println("Weighing.ixi successfully started!");
     }
 
+    /**
+     * This method provides an easy interface to invoke functions of depending IXI modules.
+     * @param service the module to interact with
+     * @param function the function to invoke
+     * @param args the arguments of the function
+     * @return returns the result of the function
+     */
     public String call(String service, String function, String... args) {
         String arguments = "";
         for(int i = 0; i < args.length; i++) {
@@ -34,12 +41,25 @@ public class WeighingModule extends IxiModule {
         return caller.call(new FunctionEnvironment(service, function), arguments, 3000);
     }
 
+    /**
+     * Initializes a weighing calculation and returns its identifier.
+     * @param vertex the vertex for which the weights are to be calculated
+     * @param attributes the attributes to match
+     * @return returns the identifier of the calculation
+     */
     public String beginWeighingCalculation(String vertex, Attribute[] attributes) {
         String identifier = Generator.getRandomHash();
         calculations.put(identifier, new WeighingCalculation(vertex, attributes));
         return identifier;
     }
 
+    /**
+     * Initializes a weighing calculation and returns its identifier.
+     * @param vertex the vertex for which the weights are to be calculated
+     * @param attributes the attributes to match
+     * @param interval the time interval to match
+     * @return returns the identifier of the calculation
+     */
     public String beginWeighingCalculation(String vertex, Attribute[] attributes, Interval interval) {
         String identifier = beginWeighingCalculation(vertex, attributes);
         WeighingCalculation calculation = calculations.get(identifier);
@@ -47,7 +67,11 @@ public class WeighingModule extends IxiModule {
         return identifier;
     }
 
-    // returns the number of referencing vertices to a given vertex that match a given set of attributes regardless of time
+     /**
+     * Calculates the number of referencing vertices to a given vertex that match a given set of attributes regardless of time
+     * @param identifier the WeighingCalculation identifier, which contains the information of all attributes
+     * @return returns the weights of the interested vertex, regardless on time
+     */
     public Set<String> calculateWeightsIndependentOfTime(String identifier) {
 
         WeighingCalculation calculation = calculations.get(identifier);
@@ -66,7 +90,12 @@ public class WeighingModule extends IxiModule {
 
     }
 
-    // returns the number of referencing nodes to a given node that correspond to a given set of attributes, depending on time
+    /**
+     * Calculates the number of referencing vertices to a given vertex that correspond to a given set of attributes, depending on time.
+     * @param identifier the WeighingCalculation identifier, which contains the information of all attributes and the time window
+     * @param randomWalkEntry the entry for the random walk timestamping procedure
+     * @return returns the weights of the interested vertex, depending on time
+     */
     public Set<String> calculateWeightsDependingOnTime(String identifier, String randomWalkEntry) {
 
         WeighingCalculation calculation = calculations.get(identifier);
@@ -95,7 +124,12 @@ public class WeighingModule extends IxiModule {
 
     }
 
-    // returns a list of vertices at the lower bound of the time frame
+    /**
+     * Returns all the vertices which match the given set of attributes and are below the lower bound of the time window
+     * @param identifier the WeighingCalculation identifier, which contains the information of all attributes and the time window
+     * @param randomWalkEntry the entry for the random walk timestamping procedure
+     * @return returns the interested set of vertices which are below the lower bound of the time window
+     */
     public Set<String> getLowerVertices(String identifier, String randomWalkEntry) {
 
         WeighingCalculation calculation = calculations.get(identifier);
@@ -109,7 +143,12 @@ public class WeighingModule extends IxiModule {
 
     }
 
-    // returns a list of vertices at the upper bound of the time frame
+    /**
+     * Returns all the vertices which match the given set of attributes and are above the upper bound of the time window.
+     * @param identifier the WeighingCalculation identifier, which contains the information of all attributes and the time window
+     * @param randomWalkEntry the entry for the random walk timestamping procedure
+     * @return returns the interested set of vertices which are above the upper bound of the time window
+     */
     public Set<String> getUpperVertices(String identifier, String randomWalkEntry) {
 
         WeighingCalculation calculation = calculations.get(identifier);
@@ -129,6 +168,13 @@ public class WeighingModule extends IxiModule {
         return true;
     }
 
+    /**
+     * Checks if a vertex (serializedTail) was issued within a specific time window. This method makes use of Timestamping.ixi to find its confidence interval.
+     * @param lowerbound the start of the time window
+     * @param upperbound the end of the time window
+     * @param randomWalkEntry the entry for the random walk timestamping procedure
+     * @return returns true if the transaction was attached in the given time interval, else return false
+     */
     private boolean isMatchingTimeInterval(String serializedTail, long lowerbound, long upperbound, String randomWalkEntry) {
 
         String identifier = caller.call(new FunctionEnvironment("Timestamping.ixi", "beginTimestampCalculation"), serializedTail + ";" + randomWalkEntry, 3000);
@@ -144,12 +190,13 @@ public class WeighingModule extends IxiModule {
 
     }
 
+    /**
+     * Gets the serialized vertex tail for a given virtual vertex tail. This method makes use of Graph.ixi to find it.
+     * @param virtualTail the virtual vertex tail to be checked
+     * @return returns its serialized tail hash
+     */
     private String getSerializedTail(String virtualTail) {
         return call("Graph.ixi", "getSerializedTail", virtualTail);
-    }
-
-    public WeighingCalculation getCalculations(String identfier) {
-        return calculations.get(identfier);
     }
 
 }
