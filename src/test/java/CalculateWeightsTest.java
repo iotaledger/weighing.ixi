@@ -220,9 +220,9 @@ public class CalculateWeightsTest extends TestTemplate {
         tip.branchHash = fourthSerializedVertex;
         tip.attachmentTimestampLowerBound = System.currentTimeMillis();
         tip.attachmentTimestampUpperBound = System.currentTimeMillis();
-        ict1.submit(tip.build());
+        Transaction tipTx = tip.build();
+        ict1.submit(tipTx);
         Thread.sleep(1000);
-
 
         // get all vertices < FOURTH_VERTEX which should return vertex 2 and vertex 3
         Transaction fourthVertexTransaction = ict1.findTransactionByHash(fourthSerializedVertex);
@@ -230,9 +230,9 @@ public class CalculateWeightsTest extends TestTemplate {
         String identifier = weighingModule.beginWeighingCalculation(firstVertex, new Attribute[] { new Attribute() }, new Interval(fourthVertexTransaction.attachmentTimestampLowerBound, fourthVertexTransaction.attachmentTimestampUpperBound));
         Set<String> result = weighingModule.getLowerVertices(identifier, genesis);
 
-        Assert.assertEquals(2, result.size());
         Assert.assertTrue(result.contains(secondVertex));
         Assert.assertTrue(result.contains(thirdVertex));
+        Assert.assertEquals(2, result.size());
 
     }
 

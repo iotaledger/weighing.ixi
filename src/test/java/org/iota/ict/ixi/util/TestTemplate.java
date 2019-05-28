@@ -17,17 +17,21 @@ public abstract class TestTemplate {
     protected WeighingModule weighingModule;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+
         EditableProperties properties1 = new EditableProperties().host("localhost").port(1337).minForwardDelay(0).maxForwardDelay(10).guiEnabled(false);
         EditableProperties properties2 = new EditableProperties().host("localhost").port(1338).minForwardDelay(0).maxForwardDelay(10).guiEnabled(false);
+
         ict1 = new Ict(properties1.toFinal());
         ict1.getModuleHolder().initAllModules();
+        weighingModule = (WeighingModule) ict1.getModuleHolder().loadVirtualModule(WeighingModule.class, "Weighing.ixi");
         ict1.getModuleHolder().startAllModules();
-        weighingModule = new WeighingModule(ict1);
+
         caller = new EEEFunctionCallerImplementation(ict1);
         ict2 = new Ict(properties2.toFinal());
         addNeighborToIct(ict1,ict2);
         addNeighborToIct(ict2,ict1);
+
     }
 
     @After

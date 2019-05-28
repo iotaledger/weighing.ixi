@@ -195,7 +195,7 @@ public class WeighingModule extends IxiModule {
      * @param virtualTail the virtual vertex tail to be checked
      * @return returns its serialized tail hash
      */
-    private String getSerializedTail(String virtualTail) {
+    public String getSerializedTail(String virtualTail) {
         return call("Graph.ixi", "getSerializedTail", virtualTail);
     }
 
