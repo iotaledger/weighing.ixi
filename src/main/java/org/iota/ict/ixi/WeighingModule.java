@@ -118,7 +118,6 @@ public class WeighingModule extends IxiModule {
 
         }
 
-
         calculation.setResult(weights);
         return weights;
 
