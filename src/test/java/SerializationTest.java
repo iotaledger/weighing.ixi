@@ -8,9 +8,9 @@ import org.junit.Test;
 public class SerializationTest extends TestTemplate {
 
     @Test
-    public void testSerialization() {
+    public void testSerialization() throws InterruptedException {
 
-        // publish a ClassFragment:
+        // publish a ClassFragment
 
         String my_classname = "CLASS9FRAGMENT9TEST";
         String referenced_trunk_hash = Generator.getRandomBundleHead();
@@ -33,7 +33,9 @@ public class SerializationTest extends TestTemplate {
         String classHash = caller.call(new FunctionEnvironment("Serialization.ixi", "publishClassFragment"), args1, 3000).split(";")[1];
         Assert.assertNotNull(classHash);
 
-        // publish a DataFragment:
+        Thread.sleep(100);
+
+        // publish a DataFragment
 
         String myOtherReferenced_trunk_hash = Generator.getRandomBundleHead();
         String myOtherReferenced_branch_hash = Generator.getRandomBundleHead();
@@ -48,6 +50,5 @@ public class SerializationTest extends TestTemplate {
         System.out.println(result);
 
     }
-
 
 }

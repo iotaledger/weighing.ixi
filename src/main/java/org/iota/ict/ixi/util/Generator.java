@@ -35,10 +35,4 @@ public class Generator {
         return hashTrits[position] == 1;
     }
 
-    public static void main(String[] args) {
-        String h = "TKTGCHDTRSC9GDYVXFTAFGGBTRVJHPSEZURRJ99XXJJ9ZGVEHSJABGEVYLWRRPCXAKF99BUORDXHRCZKQ";
-
-        System.out.println(isBundleHead(h));
-    }
-
 }
