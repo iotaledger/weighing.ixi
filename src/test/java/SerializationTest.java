@@ -1,5 +1,6 @@
 import org.iota.ict.eee.call.FunctionEnvironment;
 import org.iota.ict.ixi.util.Generator;
+import org.iota.ict.ixi.util.InputValidator;
 import org.iota.ict.ixi.util.TestTemplate;
 import org.iota.ict.utils.Trytes;
 import org.junit.Assert;
@@ -30,8 +31,10 @@ public class SerializationTest extends TestTemplate {
                         attribute1_size + " " +
                         attribute1_name;
 
-        String classHash = caller.call(new FunctionEnvironment("Serialization.ixi", "publishClassFragment"), args1, 3000).split(";")[1];
-        Assert.assertNotNull(classHash);
+        String classHashResponse = caller.call(new FunctionEnvironment("Serialization.ixi", "publishClassFragment"), args1, 3000);
+        Assert.assertNotNull(classHashResponse);
+
+        String classHash = classHashResponse.split(";")[1];
 
         Thread.sleep(100);
 
@@ -45,9 +48,7 @@ public class SerializationTest extends TestTemplate {
 
         String result = caller.call(new FunctionEnvironment("Serialization.ixi", "publishDataFragment"), args2, 3000);
 
-        Assert.assertTrue(result.length() > 0);
-
-        System.out.println(result);
+        Assert.assertTrue(InputValidator.isValidHash(result));
 
     }
 

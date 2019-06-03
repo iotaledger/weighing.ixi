@@ -32,6 +32,8 @@ public abstract class TestTemplate {
         addNeighborToIct(ict1,ict2);
         addNeighborToIct(ict2,ict1);
 
+        Thread.sleep(500);
+
     }
 
     @After
