@@ -1,54 +1,102 @@
+import org.iota.ict.eee.call.EEEFunctionCallerImplementation;
 import org.iota.ict.eee.call.FunctionEnvironment;
 import org.iota.ict.ixi.util.Generator;
 import org.iota.ict.ixi.util.TestTemplate;
+import org.iota.ict.model.transaction.Transaction;
+import org.iota.ict.model.transaction.TransactionBuilder;
 import org.iota.ict.utils.Trytes;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class SerializationTest extends TestTemplate {
 
+
     @Test
-    public void testSerialization() throws InterruptedException {
+    public void demoEEE_API(){
 
-        // publish a ClassFragment
+        //=================================================
+        //First, let's publish a random transaction
+        //=================================================
+        TransactionBuilder transactionBuilder = new TransactionBuilder();
+        transactionBuilder.signatureFragments = Trytes.padRight("THE9REFERENCED9TRANSACTION", Transaction.Field.SIGNATURE_FRAGMENTS.tryteLength);
+        Transaction theTargetTransaction = transactionBuilder.build();
+        ict1.submit(theTargetTransaction);
 
-        String my_classname = "CLASS9FRAGMENT9TEST";
-        String referenced_trunk_hash = Generator.getRandomBundleHead();
-        String referenced_branch_hash = Generator.getRandomBundleHead();
-        String ref0_classHash = Trytes.NULL_HASH;
-        String attribute0_name = "FIRST9ATTRIBUTE";
-        String attribute0_size = "17";
-        String attribute1_name = "SECOND9ATTRIBUTE";
-        String attribute1_size = "17";
+        //Keep the tx hash
+        String theTargetTransactionHash = theTargetTransaction.hash;
 
-        String args1 =  my_classname + ";" +
-                        referenced_trunk_hash + ";" +
-                        referenced_branch_hash + ";" +
-                        ref0_classHash + ";" +
-                        attribute0_size + " " +
-                        attribute0_name + ";" +
-                        attribute1_size + " " +
-                        attribute1_name;
+        //=================================================
+        //Now let's build and publish a few DataFragments
+        //=================================================
 
-        String classHash = caller.call(new FunctionEnvironment("Serialization.ixi", "publishClassFragment"), args1, 3000).split(";")[1];
-        Assert.assertNotNull(classHash);
+        EEEFunctionCallerImplementation caller = new EEEFunctionCallerImplementation(ict1);
 
-        Thread.sleep(100);
+        //To build a DataFragment, we need a ClassFragment :
+        //(in this example, our class have a reference to a random transaction and an attribute name 'ATTRIB' with a length of 33 trytes)
+        String response = caller.call(new FunctionEnvironment("Serialization.ixi","publishClassFragment"),
+                /*   className;trunk;branch;attribute 0 definition; reference 0 definition   */
+                "JUST9ANOTHER9CLASS9NAME;"+Trytes.NULL_HASH+";"+Trytes.NULL_HASH+";33 ATTRIB;"+Trytes.NULL_HASH,  //using a different classname to avoid collision with the other test
+                250);
 
-        // publish a DataFragment
+        String myClassFragmentClassHash = response.split(";")[1];
 
-        String myOtherReferenced_trunk_hash = Generator.getRandomBundleHead();
-        String myOtherReferenced_branch_hash = Generator.getRandomBundleHead();
-        String data = "A 0 ATTRIB9ZERO9VALUE;A 1 ANOTHER9ATTRIBUTE";
+        safeSleep(300);
+        //now that we have our classFragment, let's build and publish a few DataFragments
 
-        String args2 = classHash + ";" + myOtherReferenced_trunk_hash + ";" + myOtherReferenced_branch_hash + ";" + data;
+        //the first dataFragment will reference the target transaction that we published earlier.
 
-        String result = caller.call(new FunctionEnvironment("Serialization.ixi", "publishDataFragment"), args2, 3000);
+        response = caller.call(new FunctionEnvironment("Serialization.ixi","publishDataFragment"),
+                /* classhash;trunk;branch;attribute 0;reference 0   */
+                myClassFragmentClassHash+";"+Trytes.NULL_HASH+";"+Trytes.NULL_HASH+";A 0 VALUE9A;R 0 "+theTargetTransactionHash,
+                250);
+        String firstFragmentHash = response;
 
-        Assert.assertTrue(result.length() > 0);
+        //now we publish a second DataFragment of the same class, referencing our target tx, but with a different value for ATTRIB
+        response = caller.call(new FunctionEnvironment("Serialization.ixi","publishDataFragment"),
+                myClassFragmentClassHash+";"+Trytes.NULL_HASH+";"+Trytes.NULL_HASH+";A 0 VALUE9B;R 0 "+theTargetTransactionHash,
+                250);
+        String secondFragmentHash = response;
 
-        System.out.println(result);
+        //now we publish a third DataFragment of the same class, but referencing a random tx instead of our target
+        response = caller.call(new FunctionEnvironment("Serialization.ixi","publishDataFragment"),
+                myClassFragmentClassHash+";"+Trytes.NULL_HASH+";"+Trytes.NULL_HASH+";A 0 VALUE9B;R 0 "+Generator.getRandomHash(),
+                250);
+        String thirdFragmentHash = response;
 
+        //in a test context: make a small pause to ensure that transactions are propagated.
+        safeSleep(1000);
+
+        //=================================================
+        //Our data is now published, let's search for it
+        //=================================================
+
+        //search for allDataFragments referencing our target.
+        // (we expect 2 fragments)
+        response = caller.call(new FunctionEnvironment("Serialization.ixi","findReferencing"),
+                theTargetTransactionHash,
+                250);
+
+        Assert.assertEquals(2, response.split(";").length);
+        Assert.assertTrue(response.contains(firstFragmentHash));
+        Assert.assertTrue(response.contains(secondFragmentHash));
+
+        //search for allDataFragments referencing our target with ATTRIB value "VALUE9A".
+        // (we expect 1 fragment, and it should be firstDataFragment)
+        response = caller.call(new FunctionEnvironment("Serialization.ixi","findReferencing"),
+                theTargetTransactionHash+";0;VALUE9A",
+                250);
+
+        Assert.assertEquals(1, response.split(";").length);
+        Assert.assertEquals(firstFragmentHash,response);
+
+    }
+
+    private void safeSleep(long ms){
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            //ignore
+        }
     }
 
 }
