@@ -2,8 +2,8 @@ package org.iota.ict.ixi.model;
 
 public class Attribute {
 
-    public int index;
-    public String value;
+    public int index = -1;
+    public String value = null;
 
     public Attribute() {}
 

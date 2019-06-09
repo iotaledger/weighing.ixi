@@ -7,7 +7,10 @@ import org.iota.ict.ixi.model.Interval;
 import org.iota.ict.ixi.model.WeighingCalculation;
 import org.iota.ict.ixi.util.Generator;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class WeighingModule extends IxiModule {
 
@@ -81,9 +84,11 @@ public class WeighingModule extends IxiModule {
         Set<String> weights = new HashSet<>();
         String[] referencingVertices = call("Graph.ixi", "getReferencingVertices", vertex).split(";");
 
-        for(String v: referencingVertices)
-            if(isMatchingAttributes(v, attributes))
+        for(String v: referencingVertices) {
+            String serializedTail = getSerializedTail(v);
+            if(isMatchingAttributes(serializedTail, attributes))
                 weights.add(v);
+        }
 
         calculation.setResult(weights);
         return weights;
@@ -106,9 +111,11 @@ public class WeighingModule extends IxiModule {
         Set<String> weights = new HashSet<>();
         String[] referencingVertices = call("Graph.ixi", "getReferencingVertices", vertex).split(";");
 
-        for(String v: referencingVertices)
-            if(isMatchingAttributes(v, attributes))
+        for(String v: referencingVertices) {
+            String serializedTail = getSerializedTail(v);
+            if(isMatchingAttributes(serializedTail, attributes))
                 weights.add(v);
+        }
 
         for(String v: new HashSet<>(weights)) {
 
@@ -161,14 +168,35 @@ public class WeighingModule extends IxiModule {
 
     }
 
-    private boolean isMatchingAttributes(String vertex, Attribute[] attributes) {
-        // check if available keys match given attributes
-        // needs Serialization.ixi to know how data is structured
+    /**
+     * Checks if a vertex (serializedTail) matches specific attributes. This method makes use of Serialization.ixi.
+     * @param serializedTail the vertex of interest
+     * @param attributes the attributes to match
+     * @return returns true if the transaction was attached in the given time interval, else return false
+     */
+    private boolean isMatchingAttributes(String serializedTail, Attribute[] attributes) {
+
+        for(Attribute attribute: attributes) {
+
+            if(attribute.index == -1 || attribute.value == null)
+                continue;
+
+            String response = caller.call(new FunctionEnvironment("Serialization.ixi","findReferencing"),
+                    serializedTail+";"+attribute.index+";"+attribute.value,
+                    250);
+
+            if(response.length() == 0)
+                return false;
+
+        }
+
         return true;
+
     }
 
     /**
      * Checks if a vertex (serializedTail) was issued within a specific time window. This method makes use of Timestamping.ixi to find its confidence interval.
+     * @param serializedTail the vertex of interest
      * @param lowerbound the start of the time window
      * @param upperbound the end of the time window
      * @param randomWalkEntry the entry for the random walk timestamping procedure
